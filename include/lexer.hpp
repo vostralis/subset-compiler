@@ -10,14 +10,17 @@
 
 class Lexer {
 public:
-    Lexer(const std::string& path);
+    Lexer();
     ~Lexer();
 
 public:
     // Main method that parses a file into a sequence of tokens
-    std::vector<Token> parse();
+    std::vector<Token> parse(const std::string& path);
 
 private:
+    // Input stream handlers
+    void openStream();
+    void closeStream();
     // Refill the character buffer from the input stream
     bool refillBuffer();
     // Determine the next token
@@ -33,16 +36,21 @@ private:
     Token parseStringConstant();
     Token parseIdentifier(char firstCharacter);
     Token parseNumericConstant(char firstDigit);
-    Token lookupKeyword(std::string& lexeme) const;
+    Token lookupKeyword(std::string& lexeme);
+    // Formats the error string so that it containts the error line and column
+    std::string error(std::string&& error) const;
 
 private:
-    static const int BUFFER_SIZE = 16384; // Main character buffer max size
-    const int MAX_IDENTIFIER_LENGTH = 32; // Maximum length of a single identifier
+    std::string path; // Path to the currently parsed file
+    static constexpr size_t BUFFER_SIZE = 16384; // Main character buffer max size
+    static constexpr size_t MAX_IDENTIFIER_LENGTH = 32; // Maximum length of a single identifier
 
     std::ifstream m_inputStream;            // Input stream object
     std::array<char, BUFFER_SIZE> m_buffer; // Character buffer
     std::optional<char> m_pushback;         // Variable used to store the character which can't be directly returned to buffer
 
-    std::size_t m_validSize; // Actual number of  characters read from the input stream
+    std::size_t m_validSize; // Actual number of characters read from the input stream
     std::size_t m_currIndex; // Read pointer
+    std::size_t m_line;      // Line number in the currently parsed file
+    std::size_t m_column;    // Column number in the currently parsed file
 };

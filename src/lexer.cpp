@@ -3,7 +3,13 @@
 #include <iostream>
 #include <format>
 
-Lexer::Lexer(const std::string& path) {
+Lexer::Lexer() = default;
+
+Lexer::~Lexer() {
+    closeStream();
+}
+
+void Lexer::openStream() {
     m_inputStream.open(path, std::ios_base::in);
 
     if (!m_inputStream.is_open()) {
@@ -12,12 +18,15 @@ Lexer::Lexer(const std::string& path) {
 
     // Initial fill
     refillBuffer();
+
+    // Reset line and column numbers
+    m_line = m_column = 1;
 }
 
-Lexer::~Lexer() {
-    if (m_inputStream.is_open()) {
+void Lexer::closeStream() {
+    if (!m_inputStream.is_open()) {
         m_inputStream.close();
-    }
+    };
 }
 
 bool Lexer::refillBuffer() {
@@ -34,7 +43,10 @@ bool Lexer::refillBuffer() {
     return m_validSize > 0;
 }
 
-std::vector<Token> Lexer::parse() {
+std::vector<Token> Lexer::parse(const std::string& path) {
+    this->path = path;
+    openStream();
+
     std::vector<Token> tokens;
     bool is_eof = false;
 
@@ -54,7 +66,9 @@ std::vector<Token> Lexer::parse() {
             }
         }
     }
-
+    
+    closeStream();
+    
     return tokens;
 }
 
@@ -70,6 +84,18 @@ Token Lexer::getNextToken() {
         return parseStringConstant();
     }
 
+    // If token starts with letter or underscore, it's either a keyword, either an identificator
+    if (std::isalpha(c) || c == '_') {
+        return parseIdentifier(c);       
+    }
+
+    // If token starts with digit, it's either a decimal constant, either a hex constant
+    if (std::isdigit(c)) {
+        return parseNumericConstant(c);
+    }
+
+    m_column++; // Increment column counter
+
     switch (c) {
         case '\0': return Token(TOKEN_TYPE::END);
         case ',': return Token(TOKEN_TYPE::COMMA);
@@ -82,11 +108,17 @@ Token Lexer::getNextToken() {
         case ']': return Token(TOKEN_TYPE::BRACKET_CLOSE);
         case '<': {
             char next = getNextChar();
-            
+
             // Bitwise left shift <<
-            if (next == '<') return Token(TOKEN_TYPE::BLS);
+            if (next == '<') {
+                m_column++;
+                return Token(TOKEN_TYPE::BLS);
+            }
             // Operator <=
-            else if (next == '=') return Token(TOKEN_TYPE::LE); 
+            else if (next == '=') {
+                m_column++;
+                return Token(TOKEN_TYPE::LE); 
+            }
             // Operator <
             else {
                 returnCharToBuffer(next);
@@ -97,9 +129,15 @@ Token Lexer::getNextToken() {
             char next = getNextChar();
 
             // Bitwise right shift
-            if (next == '>') return Token(TOKEN_TYPE::BRS);
+            if (next == '>') {
+                m_column++;
+                return Token(TOKEN_TYPE::BRS);
+            }
             // Operator >=
-            else if (next == '=') return Token(TOKEN_TYPE::GE); 
+            else if (next == '=') {
+                m_column++;
+                return Token(TOKEN_TYPE::GE); 
+            }
             // Operator >
             else {
                 returnCharToBuffer(next); 
@@ -108,12 +146,14 @@ Token Lexer::getNextToken() {
         }
         case '=': {
             char next = getNextChar();
-
+            m_column++;
+            
             // Operator =
             if (next == '=') return Token(TOKEN_TYPE::EQ);
             // Operator ==
             else {
                 returnCharToBuffer(next);
+                m_column--;
                 return Token(TOKEN_TYPE::ASSIGN);
             }
         }
@@ -121,10 +161,13 @@ Token Lexer::getNextToken() {
             char next = getNextChar();
 
             // Operator !=
-            if (next == '=') return Token(TOKEN_TYPE::NEQ);
+            if (next == '=') {
+                m_column++; 
+                return Token(TOKEN_TYPE::NEQ);
+            }
             else {
                 returnCharToBuffer(next);
-                return Token(TOKEN_TYPE::ERROR, "Invalid lexeme.");
+                return Token(TOKEN_TYPE::ERROR, error("Invalid lexeme."));
             }
         }
         case '+': return Token(TOKEN_TYPE::PLUS);
@@ -132,20 +175,8 @@ Token Lexer::getNextToken() {
         case '*': return Token(TOKEN_TYPE::MULT);
         case '/': return Token(TOKEN_TYPE::DIV);
         case '%': return Token(TOKEN_TYPE::MOD);
-        default: break;
+        default: m_column--; return Token(TOKEN_TYPE::ERROR, error("Invalid character."));
     }
-    
-    // If token starts with letter or underscore, it's either a keyword, either an identificator
-    if (std::isalpha(c) || c == '_') {
-        return parseIdentifier(c);       
-    }
-
-    // If token starts with digit, it's either a decimal constant, either a hex constant
-    if (std::isdigit(c)) {
-        return parseNumericConstant(c);
-    }
-
-    return Token(TOKEN_TYPE::ERROR, "Invalid character.");
 }
 
 char Lexer::getNextChar() {
@@ -181,8 +212,21 @@ char Lexer::skipWhitespacesAndComments() {
         char c = getNextChar();
 
         // Skip whitespace
-        if (c == ' ' || c == '\t' || c == '\n') {
-            continue;
+        switch (c) {
+            case '\n': {
+                m_line++; // Increment the line counter when '\n' is encountered
+                m_column = 1;
+                continue;
+            }
+            case '\t': {
+                m_column += 4;
+                continue;
+            }
+            case ' ': {
+                m_column++;
+                continue;
+            }
+            default: break;
         }
 
         // Skip comment
@@ -191,7 +235,9 @@ char Lexer::skipWhitespacesAndComments() {
             // else return character to a buffer
             char next = getNextChar();
             if (next == '/') {
-                while ((c = getNextChar()) != '\0' && c != '\n') {}
+                while ((c = getNextChar()) != '\0' && c != '\n');
+                m_line++;
+                m_column = 1;
                 continue;
             } else {
                 returnCharToBuffer(next);
@@ -202,7 +248,9 @@ char Lexer::skipWhitespacesAndComments() {
     }
 }
 
-Token Lexer::lookupKeyword(std::string& lexeme) const {
+Token Lexer::lookupKeyword(std::string& lexeme) {
+    m_column += lexeme.length();
+
     if (lexeme == "main")
         return Token(TOKEN_TYPE::MAIN);
     if (lexeme == "int")
@@ -222,62 +270,69 @@ Token Lexer::lookupKeyword(std::string& lexeme) const {
 }
 
 Token Lexer::parseSymbolicConstant() {
-    char c = getNextChar();
-    char next;
+    m_column++; // '\''
+    char c = getNextChar(), next;
 
     // Symbolic constant must have a symbol between quotes
     if (c == '\'') {
-        return Token(TOKEN_TYPE::ERROR, "Symbolic constant can't be empty.");
+        return Token(TOKEN_TYPE::ERROR, error("Symbolic constant can't be empty."));
     }
     
     if (c == '\\') {
+        m_column++;
         c = getNextChar();
         next = getNextChar();
 
         if (next == '\'') {
             switch (c) {
-                case 'n':  return Token(TOKEN_TYPE::CONST_SYMB, '\n');
-                case 't':  return Token(TOKEN_TYPE::CONST_SYMB, '\t');
-                case '\\': return Token(TOKEN_TYPE::CONST_SYMB, '\\');
-                case '\'': return Token(TOKEN_TYPE::CONST_SYMB, '\'');
-                default:   return Token(TOKEN_TYPE::ERROR, "Invalid escape sequence.");
+                case 'n':  m_column += 2; return Token(TOKEN_TYPE::CONST_SYMB, '\n');
+                case 't':  m_column += 2; return Token(TOKEN_TYPE::CONST_SYMB, '\t');
+                case '\\': m_column += 2; return Token(TOKEN_TYPE::CONST_SYMB, '\\');
+                case '\'': m_column += 2; return Token(TOKEN_TYPE::CONST_SYMB, '\'');
+                default:   return Token(TOKEN_TYPE::ERROR, error("Invalid escape sequence."));
             }
         } else {
-            return Token(TOKEN_TYPE::ERROR, "Symbolic constant was never closed.");
+            return Token(TOKEN_TYPE::ERROR, error("Symbolic constant was never closed."));
         }
     } else {
         next = getNextChar();
     
         if (next == '\'') {
+            m_column += 2; // Character + '\''
             return Token(TOKEN_TYPE::CONST_SYMB, c);
         } else {
             // Got more that 1 character in symbolic constant
             return Token(
                 TOKEN_TYPE::ERROR,
-                "Symbolic constant can't contain more that 1 symbol."
+                error("Symbolic constant can't contain more that 1 symbol.")
             );
         }
     }
 }
 
 Token Lexer::parseStringConstant() {
+    m_column++; // '\"'
     std::string lexeme;
     char c = getNextChar();
     
     // Quote is closed immediately - empty string
-    if (c == '\"') return Token(TOKEN_TYPE::CONST_STR, "");
+    if (c == '\"') {
+        m_column++;
+        return Token(TOKEN_TYPE::CONST_STR, "");
+    }
 
     while (c != '\"' && c != '\0') {
         if (c == '\\') {
             char escaped = getNextChar();
             switch (escaped) {
-                case 'n':  lexeme += '\n'; break;
-                case 't':  lexeme += '\t'; break;
-                case '\\': lexeme += '\\'; break;
-                case '\"': lexeme += '\"'; break;
-                default:   return Token(TOKEN_TYPE::ERROR, "Invalid escape sequence.");
+                case 'n':  lexeme += '\n'; m_column += 2; break;
+                case 't':  lexeme += '\t'; m_column += 2; break;
+                case '\\': lexeme += '\\'; m_column += 2; break;
+                case '\"': lexeme += '\"'; m_column += 2; break;
+                default:   return Token(TOKEN_TYPE::ERROR, error("Invalid escape sequence."));
             }
         } else {
+            m_column++;
             lexeme += c;
         }
 
@@ -286,9 +341,10 @@ Token Lexer::parseStringConstant() {
 
     // Quote ("") was never closed
     if (c == '\0') {
-        return Token(TOKEN_TYPE::ERROR, "String constant was never closed");
+        return Token(TOKEN_TYPE::ERROR, error("String constant was never closed"));
     }
 
+    m_column++; // '\"'
     return Token(TOKEN_TYPE::CONST_STR, std::move(lexeme));
 }
 
@@ -314,7 +370,7 @@ Token Lexer::parseIdentifier(char firstCharacter) {
 
     returnCharToBuffer(next);
 
-    // Check if token is a keyword or an identificator
+    // Check if token is a keyword or an identifier
     return lookupKeyword(lexeme); 
 }
 
@@ -332,7 +388,7 @@ Token Lexer::parseNumericConstant(char firstDigit) {
             // 2147483647 = 0x7FFFFFFF, so we can at least discard constants
             // whose length is greater than 10 (including '0x' prefix)
             if (lexeme.length() > 10) {
-                return Token(TOKEN_TYPE::ERROR, "Hex constant is too long.");
+                return Token(TOKEN_TYPE::ERROR, error("Hex constant is too long."));
             }
 
             c = getNextChar();
@@ -340,11 +396,12 @@ Token Lexer::parseNumericConstant(char firstDigit) {
 
         // Invalid: "0x" with no digits after
         if (std::tolower(lexeme.back()) == 'x') {
-            return Token(TOKEN_TYPE::ERROR, "Invalid hex constant.");
+            return Token(TOKEN_TYPE::ERROR, error("Invalid hex constant."));
         }
 
         returnCharToBuffer(c);
-        
+        m_column += lexeme.length();
+
         return Token(TOKEN_TYPE::CONST_HEX, std::move(lexeme));
     } else {
         // Decimal constant
@@ -354,14 +411,19 @@ Token Lexer::parseNumericConstant(char firstDigit) {
             // len(2147483647) = 10, so we can at least discard constants
             // whose length is greater than 10
             if (lexeme.length() > 10) {
-                return Token(TOKEN_TYPE::ERROR, "Decimal constant is too long.");
+                return Token(TOKEN_TYPE::ERROR, error("Decimal constant is too long."));
             }
 
             c = getNextChar();
         }
 
         returnCharToBuffer(c);
+        m_column += lexeme.length();
         
         return Token(TOKEN_TYPE::CONST_DEC, std::move(lexeme));
     }
+}
+
+std::string Lexer::error(std::string&& error) const {
+    return std::format("{}:{}:{}: {}", path, m_line, m_column, error);
 }

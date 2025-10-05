@@ -9,8 +9,8 @@ int main(int argc, char *argv[]) {
     }
 
     std::string path(argv[1]);
-    Lexer lexer(path);
-    std::vector<Token> tokens = lexer.parse();
+    Lexer lexer;
+    std::vector<Token> tokens = lexer.parse(path);
 
     // if (lastToken.type == TOKEN_TYPE::T_ERROR) {
     //     const std::string& error = std::get<std::string>(lastToken.value);
