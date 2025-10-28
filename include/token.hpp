@@ -1,5 +1,9 @@
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
+
 #include <variant>
 #include <string>
+#include <array>
 
 using TOKEN_VALUE = std::variant<std::monostate, char, std::string>;
 
@@ -45,13 +49,19 @@ enum class TOKEN_TYPE {
 // Structure that represents a single token
 struct Token {
 public:
-    Token(TOKEN_TYPE type);
-    Token(TOKEN_TYPE type, char value);
-    Token(TOKEN_TYPE type, std::string&& value);
+    Token();
+    Token(TOKEN_TYPE type, size_t lineStart, size_t lineEnd, size_t columnStart, size_t columnEnd);
+    Token(TOKEN_TYPE type, char value, size_t lineStart, size_t lineEnd, size_t columnStart, size_t columnEnd);
+    Token(TOKEN_TYPE type, std::string&& value, size_t lineStart, size_t lineEnd, size_t columnStart, size_t columnEnd);
 
     void print() const;
 
 public:
     TOKEN_TYPE type;   // Type of a token
     TOKEN_VALUE value; // Value of a token that can take different types
+
+    size_t m_lineStart, m_lineEnd;
+    size_t m_columnStart, m_columnEnd;
 };
+
+#endif // TOKEN_HPP

@@ -1,3 +1,6 @@
+#ifndef LEXER_HPP
+#define LEXER_HPP
+
 #include "token.hpp"
 
 #include <string>
@@ -10,12 +13,14 @@
 
 class Lexer {
 public:
-    Lexer();
+    Lexer(std::string_view path);
     ~Lexer();
 
 public:
-    // Main method that parses a file into a sequence of tokens
-    std::vector<Token> parse(const std::string& path);
+    // Determine the next token
+    Token getNextToken();
+    std::string getFilePath() const;
+    bool isLineFeedSkipped();
 
 private:
     // Input stream handlers
@@ -23,8 +28,7 @@ private:
     void closeStream();
     // Refill the character buffer from the input stream
     bool refillBuffer();
-    // Determine the next token
-    Token getNextToken();
+    
     // Read the next character from a buffer
     char getNextChar();
     // Return taken character back to a buffer
@@ -32,16 +36,16 @@ private:
     // Goes through buffer until there's no whitespaces and comments
     char skipWhitespacesAndComments();
     // Methods used to parse constants and keywords/identifiers
-    Token parseSymbolicConstant();
-    Token parseStringConstant();
-    Token parseIdentifier(char firstCharacter);
-    Token parseNumericConstant(char firstDigit);
-    Token lookupKeyword(std::string& lexeme);
+    Token parseSymbolicConstant(size_t lineStart, size_t columnStart);
+    Token parseStringConstant(size_t lineStart, size_t columnStart);
+    Token parseIdentifier(char firstCharacter, size_t lineStart, size_t columnStart);
+    Token parseNumericConstant(char firstDigit, size_t lineStart, size_t columnStart);
+    Token lookupKeyword(std::string& lexeme, size_t lineStart, size_t lineColumn);
     // Formats the error string so that it containts the error line and column
     std::string error(std::string&& error) const;
 
 private:
-    std::string path; // Path to the currently parsed file
+    std::string m_path; // Path to the currently parsed file
     static constexpr size_t BUFFER_SIZE = 16384; // Main character buffer max size
     static constexpr size_t MAX_IDENTIFIER_LENGTH = 32; // Maximum length of a single identifier
 
@@ -49,8 +53,12 @@ private:
     std::array<char, BUFFER_SIZE> m_buffer; // Character buffer
     std::optional<char> m_pushback;         // Variable used to store the character which can't be directly returned to buffer
 
-    std::size_t m_validSize; // Actual number of characters read from the input stream
-    std::size_t m_currIndex; // Read pointer
-    std::size_t m_line;      // Line number in the currently parsed file
-    std::size_t m_column;    // Column number in the currently parsed file
+    std::size_t m_validSize;  // Actual number of characters read from the input stream
+    std::size_t m_currIndex;  // Read pointer
+    std::size_t m_line;       // Line number in the currently parsed file
+    std::size_t m_column;     // Column number in the currently parsed file
+    std::size_t m_prevColumn; // Column number of the previous character from the stream
+    bool m_isLineFeedSkipped; // Flag indicating if '\n' symbol was read
 };
+
+#endif // LEXER_HPP
