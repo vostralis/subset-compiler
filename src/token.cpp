@@ -26,37 +26,37 @@ void Token::print() const {
     switch (type) {
         case TOKEN_TYPE::MAIN:
         {
-            std::cout << "T_MAIN" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_MAIN" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::INT:
         {
-            std::cout << "T_INT" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_INT" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::SHORT:
         {
-            std::cout << "T_SHORT" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_SHORT" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::LONG:
         {
-            std::cout << "T_LONG" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_LONG" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::CHAR:
         {
-            std::cout << "T_CHAR" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_CHAR" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::TYPEDEF:
         {
-            std::cout << "T_TYPEDEF" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_TYPEDEF" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::FOR:
         {
-            std::cout << "T_FOR" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_FOR" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::IDENT:
@@ -85,117 +85,117 @@ void Token::print() const {
         }
         case TOKEN_TYPE::COMMA:
         {
-            std::cout << "T_COMMA" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_COMMA" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::SEMICOLON:
         {
-            std::cout << "T_SEMICOLON" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_SEMICOLON" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::PAR_OPEN:
+        case TOKEN_TYPE::LPAREN:
         {
-            std::cout << "T_PAR_OPEN" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_PAR_OPEN" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::PAR_CLOSE:
+        case TOKEN_TYPE::RPAREN:
         {
-            std::cout << "T_PAR_CLOSE" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_PAR_CLOSE" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::BRACE_OPEN:
+        case TOKEN_TYPE::LBRACE:
         {
-            std::cout << "T_BRACE_OPEN" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BRACE_OPEN" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::BRACE_CLOSE:
+        case TOKEN_TYPE::RBRACE:
         {
-            std::cout << "T_BRACE_CLOSE" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BRACE_CLOSE" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::BRACKET_OPEN:
+        case TOKEN_TYPE::LBRACKET:
         {
-            std::cout << "T_BRACKET_OPEN" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BRACKET_OPEN" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
-        case TOKEN_TYPE::BRACKET_CLOSE:
+        case TOKEN_TYPE::RBRACKET:
         {
-            std::cout << "T_BRACKET_CLOSE" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BRACKET_CLOSE" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::LT:
         {
-            std::cout << "T_LT" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_LT" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::LE:
         {
-            std::cout << "T_LE" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_LE" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::GT:
         {
-            std::cout << "T_GT" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_GT" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::GE:
         {
-            std::cout << "T_GE" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_GE" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::EQ:
         {
-            std::cout << "T_EQ" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_EQ" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::NEQ:
         {
-            std::cout << "T_NEQ" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_NEQ" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::BLS:
         {
-            std::cout << "T_BLS" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BLS" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::BRS:
         {
-            std::cout << "T_BRS" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_BRS" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::PLUS:
         {
-            std::cout << "T_PLUS" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_PLUS" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::MINUS:
         {
-            std::cout << "T_MINUS" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_MINUS" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::MULT:
         {
-            std::cout << "T_MULT" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_MULT" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::DIV:
         {
-            std::cout << "T_DIV" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_DIV" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::MOD:
         {
-            std::cout << "T_MOD" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_MOD" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::ASSIGN:
         {
-            std::cout << "T_ASSIGN" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_ASSIGN" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::END:
         {
-            std::cout << "T_END" << ' ' << m_columnStart << ' ' << m_columnEnd << '\n';
+            std::cout << "T_END" << ' ' << m_lineStart << ' ' << m_columnStart << '\n';
             break;
         }
         case TOKEN_TYPE::ERROR:

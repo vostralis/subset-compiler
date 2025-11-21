@@ -2,6 +2,7 @@
 #define PARSER_HPP
 
 #include "lexer.hpp"
+#include "ast.hpp"
 
 #include <array>
 
@@ -10,7 +11,7 @@ public:
     Parser(Lexer& lexer);
     ~Parser();
 
-    void parseProgram();  // P -> P D_s | e
+    std::unique_ptr<ProgramNode> parseProgram();  // P -> P D_s | e
 
     enum class PARSER_ERROR {
         UNEXPECTED_TOKEN,
@@ -30,28 +31,30 @@ public:
     };
 
 private:
-    void parseDescription();
     bool isDescriptionStart(TOKEN_TYPE type) const;
-    void parseBlock();
+    std::unique_ptr<DeclarationNode> parseMainFunction();
+    std::unique_ptr<CompoundStatementNode> parseCompoundStatement();
     bool isStatementOrDeclarationStart(TOKEN_TYPE type) const;
     bool isDeclaration(TOKEN_TYPE type) const; // Can be removed later
-    void parseTypedef();
-    void parseDeclaration();
-    void parseType();
-    void parseVariableList();
-    void parseStatement();
-    void parseForStatement();
-    void parseAssignmentStatement();
-    void parseEqualityExpression();
-    void parseComparisonExpression();
-    void parseBitwiseShiftExpression();
-    void parseAdditiveExpression();
-    void parseMultiplicativeExpression();
-    void parseUnaryExpression();
+    std::unique_ptr<TypedefNode> parseTypedef();
+    std::vector<std::unique_ptr<DeclarationNode>> parseDeclaration();
+    ParsedType parseTypeSpecifier();
+
+    std::vector<std::unique_ptr<DeclarationNode>> parseVariableList(const ParsedType& typeInfo);
+    std::unique_ptr<DeclarationNode> parseSingleVariableDeclaration(const ParsedType& typeInfo);
+    std::unique_ptr<StatementNode> parseStatement();
+    std::unique_ptr<ForNode> parseForStatement();
+    std::unique_ptr<AssignmentNode> parseAssignmentStatement();
+    std::unique_ptr<ExpressionNode> parseEqualityExpression();
+    std::unique_ptr<ExpressionNode> parseComparisonExpression();
+    std::unique_ptr<ExpressionNode> parseBitwiseShiftExpression();
+    std::unique_ptr<ExpressionNode> parseAdditiveExpression();
+    std::unique_ptr<ExpressionNode> parseMultiplicativeExpression();
+    std::unique_ptr<ExpressionNode> parseUnaryExpression();
     bool isConstant(TOKEN_TYPE type) const;
 
     Token lookahead(size_t distance = 0) const;
-    void consume();
+    Token consume();
     void match(TOKEN_TYPE expected, PARSER_ERROR mismatchCode = PARSER_ERROR::UNEXPECTED_TOKEN);
     void error(PARSER_ERROR code, const Token& found);
     void tokenDebug() const;
@@ -61,6 +64,7 @@ private:
 
     static constexpr size_t BUFFER_SIZE = 8;
     std::array<Token, BUFFER_SIZE> m_lookaheadBuffer;
+    Token consumedToken;
     size_t m_bufferPos;
     size_t m_previousLineEnd, m_previousColumnEnd;
 };

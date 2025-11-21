@@ -84,12 +84,12 @@ Token Lexer::getNextToken() {
     switch (c) {
         case ',': return Token(TOKEN_TYPE::COMMA, lineStart, m_line, columnStart, m_column);
         case ';': return Token(TOKEN_TYPE::SEMICOLON, lineStart, m_line, columnStart, m_column);
-        case '(': return Token(TOKEN_TYPE::PAR_OPEN, lineStart, m_line, columnStart, m_column);
-        case ')': return Token(TOKEN_TYPE::PAR_CLOSE, lineStart, m_line, columnStart, m_column);
-        case '{': return Token(TOKEN_TYPE::BRACE_OPEN, lineStart, m_line, columnStart, m_column);
-        case '}': return Token(TOKEN_TYPE::BRACE_CLOSE, lineStart, m_line, columnStart, m_column);
-        case '[': return Token(TOKEN_TYPE::BRACKET_OPEN, lineStart, m_line, columnStart, m_column);
-        case ']': return Token(TOKEN_TYPE::BRACKET_CLOSE, lineStart, m_line, columnStart, m_column);
+        case '(': return Token(TOKEN_TYPE::LPAREN, lineStart, m_line, columnStart, m_column);
+        case ')': return Token(TOKEN_TYPE::RPAREN, lineStart, m_line, columnStart, m_column);
+        case '{': return Token(TOKEN_TYPE::LBRACE, lineStart, m_line, columnStart, m_column);
+        case '}': return Token(TOKEN_TYPE::RBRACE, lineStart, m_line, columnStart, m_column);
+        case '[': return Token(TOKEN_TYPE::LBRACKET, lineStart, m_line, columnStart, m_column);
+        case ']': return Token(TOKEN_TYPE::RBRACKET, lineStart, m_line, columnStart, m_column);
         case '<': {
             char next = getNextChar();
 
