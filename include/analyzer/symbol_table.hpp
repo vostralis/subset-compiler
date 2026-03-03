@@ -3,8 +3,11 @@
 
 #include <vector>
 #include <unordered_map>
+#include <variant>
 
 #include "ast.hpp"
+
+using ValueVariant = std::variant<std::monostate, char, int, long, short>;
 
 struct Symbol {
     ASTNode::DataType type;
@@ -12,6 +15,8 @@ struct Symbol {
     int32_t arraySize = -1;
     bool isTypedef = false;
     DeclarationNode *declarationNode;
+    ValueVariant value;
+    std::vector<ValueVariant> arrayValues;
 };
 
 using Scope = std::unordered_map<std::string, Symbol>;

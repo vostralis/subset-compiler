@@ -4,8 +4,11 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "visitor.hpp"
+
+struct Symbol; // Forward declaration
 
 struct ASTNode {
     ASTNode(size_t line, size_t column);
@@ -72,6 +75,7 @@ struct IdentifierNode : ExpressionNode {
     std::string toString() const override;
 
     std::string name;
+    Symbol *symbolPtr = nullptr;
 };
 
 // Node for constants

@@ -2,6 +2,7 @@
 #include "parser.hpp"
 #include "analyzer.hpp"
 #include "ast_printer.hpp"
+#include "interpreter.hpp"
 
 #include <iostream>
 
@@ -12,28 +13,38 @@ int main(int argc, char *argv[]) {
     }
 
     bool displayTree = false;
-    std::string input;
+    bool isInterpretationEnabled = false;
+    std::string filepath;
 
-    if (std::string(argv[1]) == "-T") {
-        displayTree = true;
-        input = std::string(argv[2]);
-    } else {
-        input = std::string(argv[1]);
+    for (int i = 1; i < argc; ++i) {
+        auto arg = std::string(argv[i]);
+
+        if (arg == "-T") displayTree = true;
+        else if (arg == "--int") isInterpretationEnabled = true;
+        else filepath = arg; 
     }
-    
-    Lexer lexer(input);
+
+    Lexer lexer(filepath);
     
     Parser parser(lexer);
     auto root = parser.parseProgram();
 
-    if (root) {
-        Analyzer analyzer(input);
-        analyzer.analyze(*root);
+    if (!root) {
+        std::cerr << "[ERROR]: Abstract syntax tree parsing failed." << std::endl;
+        return 1;
+    }
 
-        if (displayTree) {
-            ASTPrinter printer;
-            printer.print(*root);
-        }
+    Analyzer analyzer(filepath);
+    SymbolTable& table = analyzer.analyze(*root);
+
+    if (displayTree) {
+        ASTPrinter printer;
+        printer.print(*root);
+    }
+
+    if (isInterpretationEnabled) {
+        Interpreter interpreter(filepath, table);
+        interpreter.interprete(*root);
     }
 
     return 0;

@@ -1,16 +1,18 @@
-#ifndef ANALYZER_HPP
-#define ANALYZER_HPP
+#ifndef INTERPRETER_HPP
+#define INTERPRETER_HPP
 
 #include "symbol_table.hpp"
 #include "visitor.hpp"
 
-class Analyzer : public Visitor {
+#include <iostream>
+#include <format>
+
+class Interpreter : public Visitor {
 public:
-    Analyzer(const std::string& path);
-    
+    explicit Interpreter(const std::string& filepath, SymbolTable& symbolTable);
+
 public:
-    SymbolTable& analyze(ASTNode& root);
-    static void symbDebug(const std::string& name, Symbol* symbol);
+    void interprete(ASTNode& root);
 
 private:
     void visit(IdentifierNode&) override;
@@ -27,15 +29,17 @@ private:
     void visit(MainDeclNode&) override;
     void visit(ProgramNode&) override;
 
-    int32_t evaluateConstantExpression(ExpressionNode*);
-    bool isIntegerType(ASTNode::DataType type) const;
-    
     void error(const std::string& error, ASTNode* node) const;
-    ASTNode::DataType promoteTypes(ASTNode::DataType lhs, ASTNode::DataType rhs) const;
+    void variantPrinter(const ValueVariant& val) const;
+    void performAssignment(Symbol* target, const ValueVariant& rhs);
+    int64_t getNumericValue(const ValueVariant& val) const;
+    ValueVariant createValue(ASTNode::DataType type, int64_t val) const;
 
 private:
-    SymbolTable m_symbolTable;
-    std::string m_filePath;
+    std::string m_filepath;
+    SymbolTable& m_symbolTable;
+    bool m_isInterpretationEnabled;
+    ValueVariant m_lastExpressionValue;
 };
 
-#endif // ANALYZER_HPP
+#endif // INTERPRETER_HPP

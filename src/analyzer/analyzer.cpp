@@ -5,8 +5,9 @@
 
 Analyzer::Analyzer(const std::string& path) : m_filePath(path) {}
 
-void Analyzer::analyze(ASTNode& root) {
+SymbolTable& Analyzer::analyze(ASTNode& root) {
     root.accept(*this);
+    return m_symbolTable;
 }
 
 // *
@@ -26,6 +27,8 @@ void Analyzer::visit(IdentifierNode& node) {
     } else {
         node.resolvedType = symbol->type;
     }
+
+    node.symbolPtr = symbol;
 }
 
 // *
@@ -57,6 +60,11 @@ void Analyzer::visit(BinaryOpNode& node) {
         return;
     }
 
+    // Both operands must be integers
+    if (!isIntegerType(leftType) || !isIntegerType(rightType)) {
+        error("operands for arithmetic/shift operations must be integers", isIntegerType(leftType) ? node.right.get() : node.left.get());
+    }
+
     switch (node.op) {
         case ASTNode::OperatorType::ADD:
         case ASTNode::OperatorType::SUB:
@@ -66,13 +74,8 @@ void Analyzer::visit(BinaryOpNode& node) {
         case ASTNode::OperatorType::BLS:
         case ASTNode::OperatorType::BRS:
         {
-            // Both operands must be integers
-            if (!isIntegerType(leftType) || !isIntegerType(rightType)) {
-                error("operands for arithmetic/shift operations must be integers", isIntegerType(leftType) ? node.right.get() : node.left.get());
-            }
-            
             // (long > int > short > char)
-            node.resolvedType = (leftType > rightType) ? leftType : rightType;
+            node.resolvedType = promoteTypes(leftType, rightType);
             break;
         }
 
@@ -83,11 +86,6 @@ void Analyzer::visit(BinaryOpNode& node) {
         case ASTNode::OperatorType::GT:
         case ASTNode::OperatorType::GE:
         {
-            // Both operands must be integers
-            if (!isIntegerType(leftType) || !isIntegerType(rightType)) {
-                error("operands for a comparison operation must be integers", isIntegerType(leftType) ? node.right.get() : node.left.get());
-            }
-            
             // Using int as a boolean
             node.resolvedType = ASTNode::DataType::INT;
             break;
@@ -206,6 +204,7 @@ void Analyzer::visit(VariableDeclNode& node) {
     newSymbol.declarationNode = &node;
 
     m_symbolTable.declare(name, std::move(newSymbol));
+    node.identifier->symbolPtr = m_symbolTable.lookupSymbol(name);
 }
 
 // *
@@ -297,6 +296,7 @@ void Analyzer::visit(ArrayDeclNode& node) {
     newSymbol.arraySize = calculatedSize;
 
     m_symbolTable.declare(name, std::move(newSymbol));
+    node.identifier->symbolPtr = m_symbolTable.lookupSymbol(name);
 }
 
 // *
@@ -422,7 +422,7 @@ bool Analyzer::isIntegerType(ASTNode::DataType type) const {
            type == ASTNode::DataType::LONG || type == ASTNode::DataType::CHAR;
 }
 
-void Analyzer::symbDebug(const std::string& name, Symbol* symbol) const {
+void Analyzer::symbDebug(const std::string& name, Symbol* symbol) {
     std::cout << name << ", type: ";
     switch (symbol->type) {
         case ASTNode::DataType::CHAR: std::cout << "char"; break;
@@ -446,4 +446,20 @@ void Analyzer::error(const std::string& error, ASTNode* node) const {
     );
 
     exit(EXIT_FAILURE);
+}
+
+ASTNode::DataType Analyzer::promoteTypes(ASTNode::DataType lhs, ASTNode::DataType rhs) const {
+    if (lhs < ASTNode::DataType::INT) {
+        lhs = ASTNode::DataType::INT;
+    }
+
+    if (rhs < ASTNode::DataType::INT) {
+        rhs = ASTNode::DataType::INT;
+    }
+
+    if (lhs == ASTNode::DataType::LONG || rhs == ASTNode::DataType::LONG) {
+        return ASTNode::DataType::LONG;
+    }
+
+    return ASTNode::DataType::INT;
 }
